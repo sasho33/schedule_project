@@ -1,0 +1,55 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#workerTable {
+  margin-top: 40px;
+  width: 100%;
+}
+
+#workerTable tr {
+  width: 120px;
+}
+
+th,
+td {
+  border: 1px solid rgb(94, 93, 93);
+
+  text-align: center;
+}
+
+thead {
+  background-color: rgb(239, 245, 194);
+}
+
+.navigation {
+  margin: 10px 0;
+}
+
+.navButton {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  margin: 0 10px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.inside {
+  height: 40px;
+  border-collapse: collapse;
+  background-color: #f9f9f3;
+}
+
+.inside td {
+  background-color: blanchedalmond;
+  border: 1px solid rgb(159, 158, 158);
+  font-size: small;
+  line-height: 32px;
+  text-align: center;
+  cursor: pointer;
+  /* padding-left: 10px; */
+}
