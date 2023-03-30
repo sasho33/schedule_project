@@ -33,14 +33,12 @@ scheduleDb().then((data) => {
 function getWeekDates(date) {
   const dayIndex = date.getDay();
   const dates = [];
-  const days = [];
 
   for (let i = 1; i < 8; i++) {
     const dayDate = new Date(date);
     dayDate.setDate(dayDate.getDate() - dayIndex + i);
     dates.push(dayDate);
   }
-
   return dates;
 }
 
@@ -70,6 +68,7 @@ function createSubTable(dataAtribute, rowDate) {
 function createTable() {
   const table = document.getElementById('workerTable');
   const dates = getWeekDates(currentDate);
+  console.log('Curerrent date: ' + currentDate);
 
   // Add dates to the header row
   const headerRow = table.querySelector('thead tr');
@@ -106,12 +105,28 @@ function updateTable() {
   const table = document.getElementById('workerTable');
   const dates = getWeekDates(currentDate);
 
-  // Update dates in the header row
+  // Clear previous table content
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
   const headerRow = table.querySelector('thead tr');
+  while (headerRow.children.length > 1) {
+    headerRow.removeChild(headerRow.lastChild);
+  }
+
+  createTable();
+  applySchedules(scheduleData);
+  // Update dates in the header row
+  const bodyRow = table.querySelector('tbody tr');
+
   for (let i = 1; i < headerRow.children.length; i++) {
+    // headerRow.removeChild(headerRow.lastChild);
     const th = headerRow.children[i];
     th.innerText = formatDate(dates[i - 1]);
   }
+
+  // while (bodyRow.children.length > 1) {
+  //   bodyRow.removeChild();
+  // }
 }
 
 function nextWeek() {
@@ -169,28 +184,14 @@ function cellClickHandler() {
   xhr.send(JSON.stringify(data));
 }
 
-// function applySchedules(scheduleData) {
-//   scheduleData.forEach((schedule) => {
-//     const workerName = schedule.worker_name;
-//     const shiftDate = schedule.shift_date;
-//     const shiftTime = schedule.shift_time;
-
-//     const table = document.getElementById('workerTable');
-//     const tdSelector = `td[data-name='${workerName}'][data-date='${shiftDate}']`;
-//     const td = table.querySelector(tdSelector);
-//     console.log(shiftTime);
-//     if (td.innerText == shiftTime) {
-//       console.log(td);
-//       td.classList.add('green');
-//       // const cell = Array.from(td.children).find((child) => child.innerText === shiftTime);
-//       // if (cell) {
-//       //   cell.classList.add('green');
-//       // }
-//     }
-//   });
-// }
-
 function applySchedules(scheduleData) {
+  // delete classlist from every cell
+  const subtableCells = document.querySelectorAll('.subtable-cell');
+  subtableCells.forEach((cell) => {
+    cell.classList.remove('green');
+  });
+
+  // Apply new styles
   scheduleData.forEach((schedule) => {
     const workerName = schedule.worker_name;
     const shiftDate = schedule.shift_date;
@@ -198,7 +199,6 @@ function applySchedules(scheduleData) {
 
     const subtableCells = document.querySelectorAll('.subtable-cell');
     subtableCells.forEach((cell) => {
-      // Your logic here to process each cell
       if (
         cell.dataset.name === workerName &&
         cell.dataset.date === shiftDate &&
@@ -209,32 +209,3 @@ function applySchedules(scheduleData) {
     });
   });
 }
-
-// function applySchedules(schedules) {
-//   const table = document.getElementById('workerTable');
-//   schedules.forEach((schedule) => {
-//     const workerName = schedule.workerName;
-//     const shiftDate = schedule.shiftDate;
-//     const shiftTime = schedule.shiftTime;
-
-//     const tdSelector = `td[data-name='${workerName}'][data-date='${shiftDate}']`;
-//     const td = table.querySelector(tdSelector);
-//     if (td) {
-//       const cell =
-//       if (cell) {
-//         cell.style.backgroundColor = 'green';
-//       }
-//     }
-//   });
-// }
-
-// function fetchSchedules() {
-//   fetch('get_schedule.php')
-//     .then((response) => response.json())
-//     .then((schedules) => applySchedules(schedules));
-// }
-
-// // ...
-
-// createTable();
-// fetchSchedules();
