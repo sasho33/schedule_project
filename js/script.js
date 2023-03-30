@@ -1,10 +1,34 @@
 /*jshint esversion: 8 */
 
-const workers = ['Alice', 'Bob', 'Charlie', 'David', 'Eva'];
-const shifts = ['7-16', '16-23', '23-7'];
-const colors = ['#FFFFEE', '#FFFFDE ', '#FEFFCF'];
+const workers = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Oleg'];
+const shifts = ['8a', '4p', '11p'];
+const colors = ['#FBFCDF', '#FAFCB6 ', '##FBFE80'];
 let currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+let table;
+// fetching data from DB
+const scheduleDb = async function fetchData() {
+  const response = await fetch('get_schedule_from_DB.php');
+  const data = await response.json();
+  return data;
+};
+
+// Declare a variable to store the results
+let scheduleData = [];
+
+// Call the function and use forEach to process the data
+scheduleDb().then((data) => {
+  data.forEach((item) => {
+    // Process the item and add it to the resultArray
+    // For example, let's assume we just want to store the item as it is:
+    scheduleData.push(item);
+  });
+  applySchedules(scheduleData);
+});
+
+// function renderEachShift () {
+
+// }
 
 function getWeekDates(date) {
   const dayIndex = date.getDay();
@@ -32,6 +56,7 @@ function createSubTable(dataAtribute, rowDate) {
   subTable.classList.add('inside');
   for (let i = 0; i < 3; i++) {
     const cell = document.createElement('td');
+    cell.classList.add('subtable-cell');
     cell.innerText = shifts[i];
     cell.style.backgroundColor = colors[i];
     cell.dataset.name = dataAtribute;
@@ -58,12 +83,16 @@ function createTable() {
   const tbody = table.querySelector('tbody');
   workers.forEach((worker) => {
     const tr = document.createElement('tr');
+    tr.setAttribute('scope', 'row');
     const tdName = document.createElement('td');
+    tdName.setAttribute('scope', 'col');
     tdName.textContent = worker;
     tr.appendChild(tdName);
 
     dates.forEach((date) => {
       const td = document.createElement('td');
+      td.setAttribute('scope', 'col');
+      td.classList.add('date-field');
       const subTable = createSubTable(worker, date);
       td.appendChild(subTable);
       tr.appendChild(td);
@@ -111,11 +140,11 @@ function cellClickHandler() {
 
   // Toggle the cell color and determine the action
   let action;
-  if (this.style.backgroundColor === 'green') {
-    this.style.backgroundColor = '';
+  if (this.classList.contains('green')) {
+    this.classList.remove('green');
     action = 'delete';
   } else {
-    this.style.backgroundColor = 'green';
+    this.classList.add('green');
     action = 'insert';
   }
 
@@ -138,6 +167,47 @@ function cellClickHandler() {
   };
 
   xhr.send(JSON.stringify(data));
+}
+
+// function applySchedules(scheduleData) {
+//   scheduleData.forEach((schedule) => {
+//     const workerName = schedule.worker_name;
+//     const shiftDate = schedule.shift_date;
+//     const shiftTime = schedule.shift_time;
+
+//     const table = document.getElementById('workerTable');
+//     const tdSelector = `td[data-name='${workerName}'][data-date='${shiftDate}']`;
+//     const td = table.querySelector(tdSelector);
+//     console.log(shiftTime);
+//     if (td.innerText == shiftTime) {
+//       console.log(td);
+//       td.classList.add('green');
+//       // const cell = Array.from(td.children).find((child) => child.innerText === shiftTime);
+//       // if (cell) {
+//       //   cell.classList.add('green');
+//       // }
+//     }
+//   });
+// }
+
+function applySchedules(scheduleData) {
+  scheduleData.forEach((schedule) => {
+    const workerName = schedule.worker_name;
+    const shiftDate = schedule.shift_date;
+    const shiftTime = schedule.shift_time;
+
+    const subtableCells = document.querySelectorAll('.subtable-cell');
+    subtableCells.forEach((cell) => {
+      // Your logic here to process each cell
+      if (
+        cell.dataset.name === workerName &&
+        cell.dataset.date === shiftDate &&
+        cell.innerText === shiftTime
+      ) {
+        cell.classList.add('green');
+      }
+    });
+  });
 }
 
 // function applySchedules(schedules) {
