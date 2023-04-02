@@ -1,34 +1,44 @@
 /*jshint esversion: 8 */
 
-const workers = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Oleg'];
+// const workers = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Oleg'];
 const shifts = ['8a', '4p', '11p'];
-const colors = ['#FBFCDF', '#FAFCB6 ', '##FBFE80'];
+const colors = ['#E1E1E0', '#C8C8C7', '#A5A5A5'];
 let currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let table;
-// fetching data from DB
+
+// fetching schedule data from DB
 const scheduleDb = async function fetchData() {
   const response = await fetch('get_schedule_from_DB.php');
   const data = await response.json();
   return data;
 };
 
+// Fetching worker data from DB
+const fetchWorkers = async function () {
+  const response = await fetch('get_workers_from_DB.php');
+  const data = await response.json();
+  return data;
+};
+
 // Declare a variable to store the results
 let scheduleData = [];
+let workers = [];
+
+// Call the fetchWorkers function and populate the workers array
+fetchWorkers().then((data) => {
+  workers = data;
+  updateTable();
+});
 
 // Call the function and use forEach to process the data
 scheduleDb().then((data) => {
   data.forEach((item) => {
     // Process the item and add it to the resultArray
-    // For example, let's assume we just want to store the item as it is:
     scheduleData.push(item);
   });
   applySchedules(scheduleData);
 });
-
-// function renderEachShift () {
-
-// }
 
 function getWeekDates(date) {
   const dayIndex = date.getDay();
@@ -43,13 +53,17 @@ function getWeekDates(date) {
 }
 
 function formatDate(date) {
+  if (!(date instanceof Date)) {
+    console.error('Invalid date object:', date);
+    return '';
+  }
   const dd = String(date.getDate()).padStart(2, '0');
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yy = String(date.getFullYear()).substring(2);
   return `${daysOfWeek[date.getDay()]} ${dd}/${mm}/${yy}`;
 }
 
-function createSubTable(dataAtribute, rowDate) {
+function createSubTable(workerObj, rowDate) {
   const subTable = document.createElement('table');
   subTable.classList.add('inside');
   for (let i = 0; i < 3; i++) {
@@ -57,9 +71,10 @@ function createSubTable(dataAtribute, rowDate) {
     cell.classList.add('subtable-cell');
     cell.innerText = shifts[i];
     cell.style.backgroundColor = colors[i];
-    cell.dataset.name = dataAtribute;
+    cell.dataset.worker_id = workerObj.id; // Add the worker id as a data attribute
+    cell.dataset.name = workerObj.name;
     cell.dataset.date = formatDate(rowDate);
-    cell.addEventListener('click', cellClickHandler); // Add click event listener
+    cell.addEventListener('click', cellClickHandler);
     subTable.appendChild(cell);
   }
   return subTable;
@@ -72,6 +87,9 @@ function createTable() {
 
   // Add dates to the header row
   const headerRow = table.querySelector('thead tr');
+  // const headerRow = table.querySelector('.dataValue');
+  // console.log('headerRow: ' + headerRow);
+  // console.log('hheaderRow: ' + hheaderRow);
   dates.forEach((date) => {
     const th = document.createElement('th');
     th.innerText = formatDate(date);
@@ -80,19 +98,29 @@ function createTable() {
 
   // Add worker names and create cells for each day
   const tbody = table.querySelector('tbody');
-  workers.forEach((worker) => {
+  workers.forEach((workerObj) => {
     const tr = document.createElement('tr');
     tr.setAttribute('scope', 'row');
     const tdName = document.createElement('td');
     tdName.setAttribute('scope', 'col');
-    tdName.textContent = worker;
+    tdName.textContent = workerObj.name;
     tr.appendChild(tdName);
+    const tdEdit = document.createElement('td');
+    tdEdit.setAttribute('scope', 'col');
+    tdEdit.innerHTML =
+      '<i class="fa-solid fa-pen-to-square"></i> <i class="fa-solid fa-trash"></i>';
+    tr.appendChild(tdEdit);
+
+    const tdTotal = document.createElement('td');
+    tdTotal.setAttribute('scope', 'col');
+    tdTotal.textContent = 'Sum';
+    tr.appendChild(tdTotal);
 
     dates.forEach((date) => {
       const td = document.createElement('td');
       td.setAttribute('scope', 'col');
       td.classList.add('date-field');
-      const subTable = createSubTable(worker, date);
+      const subTable = createSubTable(workerObj, date);
       td.appendChild(subTable);
       tr.appendChild(td);
     });
@@ -109,7 +137,7 @@ function updateTable() {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
   const headerRow = table.querySelector('thead tr');
-  while (headerRow.children.length > 1) {
+  while (headerRow.children.length > 3) {
     headerRow.removeChild(headerRow.lastChild);
   }
 
@@ -120,8 +148,10 @@ function updateTable() {
 
   for (let i = 1; i < headerRow.children.length; i++) {
     // headerRow.removeChild(headerRow.lastChild);
-    const th = headerRow.children[i];
-    th.innerText = formatDate(dates[i - 1]);
+    const th = headerRow.children[i + 2];
+    if (th) {
+      th.innerText = formatDate(dates[i - 1]);
+    }
   }
 
   // while (bodyRow.children.length > 1) {
@@ -139,7 +169,7 @@ function prevWeek() {
   updateTable();
 }
 
-createTable();
+// createTable();
 
 //event listeners for next/previous week buttons
 document.getElementById('nextWeek').addEventListener('click', nextWeek);
@@ -152,6 +182,7 @@ function cellClickHandler() {
   const workerName = this.dataset.name;
   const shiftDate = this.dataset.date;
   const shiftTime = this.innerText;
+  const workerId = this.dataset.worker_id;
 
   // Toggle the cell color and determine the action
   let action;
@@ -166,6 +197,7 @@ function cellClickHandler() {
   // Create an object with the data
   const data = {
     workerName: workerName,
+    workerId: workerId,
     shiftDate: shiftDate,
     shiftTime: shiftTime,
   };
@@ -193,6 +225,7 @@ function applySchedules(scheduleData) {
 
   // Apply new styles
   scheduleData.forEach((schedule) => {
+    const workerId = schedule.worker_id;
     const workerName = schedule.worker_name;
     const shiftDate = schedule.shift_date;
     const shiftTime = schedule.shift_time;
@@ -200,7 +233,7 @@ function applySchedules(scheduleData) {
     const subtableCells = document.querySelectorAll('.subtable-cell');
     subtableCells.forEach((cell) => {
       if (
-        cell.dataset.name === workerName &&
+        cell.dataset.worker_id === workerId &&
         cell.dataset.date === shiftDate &&
         cell.innerText === shiftTime
       ) {
