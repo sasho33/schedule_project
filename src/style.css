@@ -58,3 +58,14 @@ thead {
 .green {
   background-color: green !important;
 }
+
+.head {
+  display: flex;
+
+  margin-top: 25px;
+}
+
+#locationSelect {
+  width: 300px;
+  margin: -10px 5px;
+}

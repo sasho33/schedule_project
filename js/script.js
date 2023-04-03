@@ -7,6 +7,33 @@ let currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let table;
 
+const fetchLocations = async function () {
+  const response = await fetch('get_locations_from_DB.php');
+  const data = await response.json();
+  return data;
+};
+
+// Populate location select element
+function populateLocationSelect(locations) {
+  const locationSelect = document.getElementById('locationSelect');
+
+  locations.forEach((location) => {
+    const option = document.createElement('option');
+    option.value = location.id;
+    option.textContent = location.location_name; // Display location name as innerText
+    locationSelect.appendChild(option);
+  });
+
+  // Set the first location as the default selected option
+  locationSelect.selectedIndex = 0;
+  locationSelect.dispatchEvent(new Event('change'));
+}
+
+// Fetch location data and populate the select element
+fetchLocations().then((data) => {
+  populateLocationSelect(data);
+});
+
 // fetching schedule data from DB
 const scheduleDb = async function fetchData() {
   const response = await fetch('get_schedule_from_DB.php');
@@ -15,10 +42,14 @@ const scheduleDb = async function fetchData() {
 };
 
 // Fetching worker data from DB
-const fetchWorkers = async function () {
-  const response = await fetch('get_workers_from_DB.php');
+const fetchWorkers = async function (location_id) {
+  const response = await fetch('get_workers_from_DB.php?location_id=' + location_id);
   const data = await response.json();
-  return data;
+  console.log(data);
+  return data.map((worker) => ({
+    id: worker.id,
+    name: `${worker.first_name} ${worker.last_name}`, // Use the correct column name for the worker name
+  }));
 };
 
 // Declare a variable to store the results
@@ -108,7 +139,7 @@ function createTable() {
     const tdEdit = document.createElement('td');
     tdEdit.setAttribute('scope', 'col');
     tdEdit.innerHTML =
-      '<i class="fa-solid fa-pen-to-square"></i> <i class="fa-solid fa-trash"></i>';
+      '<button class="btn-success btn-sm"><i class="fa-solid fa-pen-to-square"></i></button>  <button class="btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>';
     tr.appendChild(tdEdit);
 
     const tdTotal = document.createElement('td');
@@ -174,6 +205,17 @@ function prevWeek() {
 //event listeners for next/previous week buttons
 document.getElementById('nextWeek').addEventListener('click', nextWeek);
 document.getElementById('prevWeek').addEventListener('click', prevWeek);
+// Event listener for location select
+// Event listener for location select
+document.getElementById('locationSelect').addEventListener('change', function () {
+  const location_id = this.value;
+
+  // Call the fetchWorkers function with the selected location_id and update the workers array
+  fetchWorkers(location_id).then((data) => {
+    workers = data;
+    updateTable();
+  });
+});
 
 //handle the clicks to fetch data and update the table
 // Add this function to handle cell clicks
