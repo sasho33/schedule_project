@@ -11,8 +11,8 @@ $shift_date = $jsonData['shiftDate'];
 $shift_time = $jsonData['shiftTime'];
 
 // Prepare and bind for DELETE action
-$stmt = $conn->prepare("DELETE FROM schedule WHERE worker_id=? AND shift_date=? AND shift_time=? AND worker_name=?");
-$stmt->bind_param("isss", $worker_id, $shift_date, $shift_time, $worker_name);
+$stmt = $conn->prepare("DELETE FROM schedule WHERE worker_id=? AND shift_date=? AND shift_time=?");
+$stmt->bind_param("iss", $worker_id, $shift_date, $shift_time);
 
 // Execute query and close connection
 $stmt->execute();

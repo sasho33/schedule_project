@@ -1,17 +1,61 @@
 /*jshint esversion: 8 */
 
-// const workers = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Oleg'];
 const shifts = ['8a', '4p', '11p'];
 const colors = ['#E1E1E0', '#C8C8C7', '#A5A5A5'];
-let currentDate = new Date();
+const currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-let table;
+let scheduleData = [];
+let workers = [];
 
-const fetchLocations = async function () {
-  const response = await fetch('get_locations_from_DB.php');
+const table = document.getElementById('workerTable');
+const headerRow = document.querySelector('tr');
+
+//function for fetching data from db in async way
+async function fetchData(url) {
+  const response = await fetch(url);
   const data = await response.json();
   return data;
+}
+
+// Fetch location data and populate the select element
+fetchData('get_locations_from_DB.php').then((data) => {
+  populateLocationSelect(data);
+});
+
+// fetching schedule data from DB
+fetchData('get_schedule_from_DB.php').then((data) => {
+  // Process and apply schedules
+  // Call the function and use forEach to process the data
+  data.forEach((item) => {
+    // Process the item and add it to the resultArray
+    scheduleData.push(item);
+  });
+  applySchedules(scheduleData);
+});
+
+// Fetching worker data from DB
+const fetchWorkers = async function (location_id) {
+  const response = await fetch('get_workers_from_DB.php?location_id=' + location_id);
+  const data = await response.json();
+  return data.map((worker) => ({
+    id: worker.id,
+    name: `${worker.first_name} ${worker.last_name}`, // Use the correct column name for the worker name
+  }));
 };
+
+// Call the fetchWorkers function and populate the workers array
+fetchWorkers().then((data) => {
+  workers = data;
+  updateTable();
+});
+
+// const scheduleDb = async function fetchData() {
+//   const response = await fetch('get_schedule_from_DB.php');
+//   const data = await response.json();
+//   return data;
+// };
+
+// scheduleDb().then((data) => {});
 
 // Populate location select element
 function populateLocationSelect(locations) {
@@ -29,56 +73,31 @@ function populateLocationSelect(locations) {
   locationSelect.dispatchEvent(new Event('change'));
 }
 
-// Fetch location data and populate the select element
-fetchLocations().then((data) => {
-  populateLocationSelect(data);
-});
-
-// fetching schedule data from DB
-const scheduleDb = async function fetchData() {
-  const response = await fetch('get_schedule_from_DB.php');
-  const data = await response.json();
-  return data;
-};
-
-// Fetching worker data from DB
-const fetchWorkers = async function (location_id) {
-  const response = await fetch('get_workers_from_DB.php?location_id=' + location_id);
-  const data = await response.json();
-  console.log(data);
-  return data.map((worker) => ({
-    id: worker.id,
-    name: `${worker.first_name} ${worker.last_name}`, // Use the correct column name for the worker name
-  }));
-};
-
-// Declare a variable to store the results
-let scheduleData = [];
-let workers = [];
-
-// Call the fetchWorkers function and populate the workers array
-fetchWorkers().then((data) => {
-  workers = data;
-  updateTable();
-});
-
-// Call the function and use forEach to process the data
-scheduleDb().then((data) => {
-  data.forEach((item) => {
-    // Process the item and add it to the resultArray
-    scheduleData.push(item);
-  });
-  applySchedules(scheduleData);
-});
-
 function getWeekDates(date) {
   const dayIndex = date.getDay();
+  // console.log(dayIndex);
   const dates = [];
 
   for (let i = 1; i < 8; i++) {
     const dayDate = new Date(date);
     dayDate.setDate(dayDate.getDate() - dayIndex + i);
     dates.push(dayDate);
+    // console.log(dates);
+  }
+  return dates;
+}
+
+function getMonthDates(date) {
+  const dayIndex = date.getDay();
+  const dates = [];
+  let today = new Date();
+  var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+  for (let i = 1; i <= lastDayOfMonth; i++) {
+    const dayDate = new Date(date);
+    dayDate.setDate(dayDate.getDate() - dayIndex + i);
+    dates.push(dayDate);
+    // console.log(dates);
   }
   return dates;
 }
@@ -111,21 +130,24 @@ function createSubTable(workerObj, rowDate) {
   return subTable;
 }
 
-function createTable() {
-  const table = document.getElementById('workerTable');
-  const dates = getWeekDates(currentDate);
-  console.log('Curerrent date: ' + currentDate);
-
-  // Add dates to the header row
-  const headerRow = table.querySelector('thead tr');
-  // const headerRow = table.querySelector('.dataValue');
-  // console.log('headerRow: ' + headerRow);
-  // console.log('hheaderRow: ' + hheaderRow);
+function createTableHeader(dates) {
+  const headerRow = document.querySelector('tr');
   dates.forEach((date) => {
     const th = document.createElement('th');
     th.innerText = formatDate(date);
     headerRow.appendChild(th);
   });
+
+  return headerRow;
+}
+
+function createTable() {
+  const dates = getWeekDates(currentDate);
+  // const dates = getMonthDates(currentDate);
+
+  // Add dates to the header row
+  const headerRow = createTableHeader(dates);
+  table.querySelector('thead').appendChild(headerRow);
 
   // Add worker names and create cells for each day
   const tbody = table.querySelector('tbody');
@@ -144,6 +166,7 @@ function createTable() {
 
     const tdTotal = document.createElement('td');
     tdTotal.setAttribute('scope', 'col');
+    tdTotal.setAttribute('id', 'total');
     tdTotal.textContent = 'Sum';
     tr.appendChild(tdTotal);
 
@@ -159,26 +182,26 @@ function createTable() {
     tbody.appendChild(tr);
   });
 }
-
-function updateTable() {
-  const table = document.getElementById('workerTable');
-  const dates = getWeekDates(currentDate);
-
-  // Clear previous table content
+function clearTable() {
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
   const headerRow = table.querySelector('thead tr');
   while (headerRow.children.length > 3) {
     headerRow.removeChild(headerRow.lastChild);
   }
+}
 
+function updateTable() {
+  const dates = getWeekDates(currentDate);
+
+  // Clear previous table content
+  clearTable();
+  // Create new table content
   createTable();
   applySchedules(scheduleData);
   // Update dates in the header row
-  const bodyRow = table.querySelector('tbody tr');
 
   for (let i = 1; i < headerRow.children.length; i++) {
-    // headerRow.removeChild(headerRow.lastChild);
     const th = headerRow.children[i + 2];
     if (th) {
       th.innerText = formatDate(dates[i - 1]);
@@ -200,12 +223,9 @@ function prevWeek() {
   updateTable();
 }
 
-// createTable();
-
 //event listeners for next/previous week buttons
 document.getElementById('nextWeek').addEventListener('click', nextWeek);
 document.getElementById('prevWeek').addEventListener('click', prevWeek);
-// Event listener for location select
 // Event listener for location select
 document.getElementById('locationSelect').addEventListener('change', function () {
   const location_id = this.value;
@@ -218,7 +238,6 @@ document.getElementById('locationSelect').addEventListener('change', function ()
 });
 
 //handle the clicks to fetch data and update the table
-// Add this function to handle cell clicks
 // Add this function to handle cell clicks
 function cellClickHandler() {
   const workerName = this.dataset.name;
@@ -245,30 +264,50 @@ function cellClickHandler() {
   };
 
   // Send data to PHP using XMLHttpRequest and JSON
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', action === 'insert' ? 'insert_schedule.php' : 'delete_schedule.php', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
+  //   const xhr = new XMLHttpRequest();
+  //   xhr.open('POST', action === 'insert' ? 'insert_schedule.php' : 'delete_schedule.php', true);
+  //   xhr.setRequestHeader('Content-Type', 'application/json');
 
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      console.log('Action executed: ' + action);
-    }
-  };
+  //   xhr.onreadystatechange = function () {
+  //     if (xhr.readyState === 4 && xhr.status === 200) {
+  //       console.log('Action executed: ' + action);
+  //     }
+  //   };
 
-  xhr.send(JSON.stringify(data));
+  //   xhr.send(JSON.stringify(data));
+  // }
+
+  const url = action === 'insert' ? 'insert_schedule.php' : 'delete_schedule.php';
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => {
+      if (response.ok) {
+        console.log('Action executed: ' + action);
+      } else {
+        throw new Error('Network response was not ok');
+      }
+    })
+    .catch((error) => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
 }
 
 function applySchedules(scheduleData) {
-  // delete classlist from every cell
-  const subtableCells = document.querySelectorAll('.subtable-cell');
-  subtableCells.forEach((cell) => {
+  // Remove existing green class from cells
+  const greenCells = document.querySelectorAll('.subtable-cell.green');
+  greenCells.forEach((cell) => {
     cell.classList.remove('green');
   });
 
   // Apply new styles
   scheduleData.forEach((schedule) => {
     const workerId = schedule.worker_id;
-    const workerName = schedule.worker_name;
     const shiftDate = schedule.shift_date;
     const shiftTime = schedule.shift_time;
 
