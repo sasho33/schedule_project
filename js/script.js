@@ -6,9 +6,36 @@ const currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let scheduleData = [];
 let workers = [];
-
+const nextPeriodButton = document.getElementById('nextWeek');
+const previousPeriodButton = document.getElementById('prevWeek');
 const table = document.getElementById('workerTable');
 const headerRow = document.querySelector('tr');
+document.getElementById('showSelect').addEventListener('change', function () {
+  updateTable();
+  if (this.value === 'Month') {
+    nextPeriodButton.innerText = 'Next month';
+    previousPeriodButton.innerText = 'Previous month';
+  } else {
+    nextPeriodButton.innerText = 'Next week';
+    previousPeriodButton.innerText = 'Previous week';
+  }
+});
+
+//event listeners for next/previous week buttons
+// document.getElementById('nextWeek').addEventListener('click', nextWeek);
+// document.getElementById('prevWeek').addEventListener('click', prevWeek);
+nextPeriodButton.addEventListener('click', nextPeriod);
+previousPeriodButton.addEventListener('click', prevPeriod);
+// Event listener for location select
+document.getElementById('locationSelect').addEventListener('change', function () {
+  const location_id = this.value;
+
+  // Call the fetchWorkers function with the selected location_id and update the workers array
+  fetchWorkers(location_id).then((data) => {
+    workers = data;
+    updateTable();
+  });
+});
 
 //function for fetching data from db in async way
 async function fetchData(url) {
@@ -90,14 +117,13 @@ function getWeekDates(date) {
 function getMonthDates(date) {
   const dayIndex = date.getDay();
   const dates = [];
-  let today = new Date();
-  var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  // let today = new Date();
+  var lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
   for (let i = 1; i <= lastDayOfMonth; i++) {
     const dayDate = new Date(date);
-    dayDate.setDate(dayDate.getDate() - dayIndex + i);
+    dayDate.setDate(i);
     dates.push(dayDate);
-    // console.log(dates);
   }
   return dates;
 }
@@ -141,8 +167,8 @@ function createTableHeader(dates) {
   return headerRow;
 }
 
-function createTable() {
-  const dates = getWeekDates(currentDate);
+function createTable(dates) {
+  // const dates = getWeekDates(currentDate);
   // const dates = getMonthDates(currentDate);
 
   // Add dates to the header row
@@ -160,8 +186,24 @@ function createTable() {
     tr.appendChild(tdName);
     const tdEdit = document.createElement('td');
     tdEdit.setAttribute('scope', 'col');
-    tdEdit.innerHTML =
-      '<button class="btn-success btn-sm"><i class="fa-solid fa-pen-to-square"></i></button>  <button class="btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>';
+    // tdEdit.innerHTML =
+    //   '<button class="btn-success btn-sm"><i class="fa-solid fa-pen-to-square"></i></button>  <button class="btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>';
+    // tr.appendChild(tdEdit);
+    // creatin edit buttons insile cell
+    const editButton = document.createElement('button');
+    editButton.classList.add('editButton', 'btn-success', 'btn-sm');
+    const editIcon = document.createElement('i');
+    editIcon.classList.add('fa-solid', 'fa-pen-to-square');
+    editButton.appendChild(editIcon);
+    tdEdit.appendChild(editButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('btn-danger', 'btn-sm');
+    const deleteIcon = document.createElement('i');
+    deleteIcon.classList.add('fa-solid', 'fa-trash');
+    deleteButton.appendChild(deleteIcon);
+    tdEdit.appendChild(deleteButton);
+
     tr.appendChild(tdEdit);
 
     const tdTotal = document.createElement('td');
@@ -192,12 +234,20 @@ function clearTable() {
 }
 
 function updateTable() {
-  const dates = getWeekDates(currentDate);
+  const showSelect = document.getElementById('showSelect');
+  const selectedOption = showSelect.options[showSelect.selectedIndex].value;
+  console.log('selected option:' + selectedOption);
+  let dates;
+  if (selectedOption === 'Month') {
+    dates = getMonthDates(currentDate);
+  } else {
+    dates = getWeekDates(currentDate);
+  }
 
   // Clear previous table content
-  clearTable();
+  clearTable(dates);
   // Create new table content
-  createTable();
+  createTable(dates);
   applySchedules(scheduleData);
   // Update dates in the header row
 
@@ -213,29 +263,51 @@ function updateTable() {
   // }
 }
 
-function nextWeek() {
-  currentDate.setDate(currentDate.getDate() + 7);
+// function nextWeek() {
+//   currentDate.setDate(currentDate.getDate() + 7);
+//   updateTable();
+// }
+
+// function prevWeek() {
+//   currentDate.setDate(currentDate.getDate() - 7);
+//   updateTable();
+// }
+
+function nextPeriod() {
+  const showSelect = document.getElementById('showSelect');
+  const selectedOption = showSelect.options[showSelect.selectedIndex].value;
+
+  if (selectedOption === 'Month') {
+    const daysInMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+    ).getDate();
+    currentDate.setDate(currentDate.getDate() + daysInMonth);
+  } else {
+    currentDate.setDate(currentDate.getDate() + 7);
+  }
+
   updateTable();
 }
 
-function prevWeek() {
-  currentDate.setDate(currentDate.getDate() - 7);
+function prevPeriod() {
+  const showSelect = document.getElementById('showSelect');
+  const selectedOption = showSelect.options[showSelect.selectedIndex].value;
+
+  if (selectedOption === 'Month') {
+    const daysInPrevMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      0,
+    ).getDate();
+    currentDate.setDate(currentDate.getDate() - daysInPrevMonth);
+  } else {
+    currentDate.setDate(currentDate.getDate() - 7);
+  }
+
   updateTable();
 }
-
-//event listeners for next/previous week buttons
-document.getElementById('nextWeek').addEventListener('click', nextWeek);
-document.getElementById('prevWeek').addEventListener('click', prevWeek);
-// Event listener for location select
-document.getElementById('locationSelect').addEventListener('change', function () {
-  const location_id = this.value;
-
-  // Call the fetchWorkers function with the selected location_id and update the workers array
-  fetchWorkers(location_id).then((data) => {
-    workers = data;
-    updateTable();
-  });
-});
 
 //handle the clicks to fetch data and update the table
 // Add this function to handle cell clicks
@@ -289,6 +361,7 @@ function cellClickHandler() {
     .then((response) => {
       if (response.ok) {
         console.log('Action executed: ' + action);
+        updateTotalHours(); // Update the total hours after the action
       } else {
         throw new Error('Network response was not ok');
       }
@@ -322,4 +395,20 @@ function applySchedules(scheduleData) {
       }
     });
   });
+  // Update total hours
+  updateTotalHours();
 }
+
+function updateTotalHours() {
+  const rows = document.querySelectorAll('tbody tr');
+  rows.forEach((row) => {
+    const subtableCells = row.querySelectorAll('.subtable-cell.green');
+    let sum = 0;
+    subtableCells.forEach((cell) => {
+      sum += 8;
+    });
+    const totalCell = row.querySelector('#total');
+    totalCell.textContent = sum;
+  });
+}
+// updateTable();

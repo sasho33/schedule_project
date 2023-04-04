@@ -19,6 +19,7 @@ table.data-field {
 th,
 td {
   text-align: center;
+  position: relative;
 }
 
 thead {
@@ -41,15 +42,21 @@ thead {
 }
 
 .inside {
-  height: 40px;
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 99%;
+  width: 100%;
   border-collapse: collapse;
   background-color: #f9f9f3;
+  border-left: 1px solid rgb(120, 120, 120);
+  border-right: 1px solid rgb(120, 120, 120);
 }
 
 .inside td {
   background-color: blanchedalmond;
   font-size: small;
-  line-height: 32px;
+  line-height: 45px;
   text-align: center;
   cursor: pointer;
   /* padding-left: 10px; */
@@ -68,4 +75,13 @@ thead {
 .head > select {
   max-width: 300px;
   margin: -5px 30px 0 5px;
+}
+
+.table-container {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.editButton {
+  margin-right: 3px;
 }
