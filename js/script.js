@@ -19,7 +19,8 @@ document.getElementById('addWorkerForm').addEventListener('submit', function (ev
 });
 
 document.getElementById('showSelect').addEventListener('change', function () {
-  updateTable();
+  reloadAfterUpdate();
+  updateSchedules();
   if (this.value === 'Month') {
     nextPeriodButton.innerText = 'Next month';
     previousPeriodButton.innerText = 'Previous month';
@@ -59,15 +60,17 @@ fetchData('get_locations_from_DB.php').then((data) => {
 });
 
 // fetching schedule data from DB
-fetchData('get_schedule_from_DB.php').then((data) => {
-  // Process and apply schedules
-  // Call the function and use forEach to process the data
-  data.forEach((item) => {
-    // Process the item and add it to the resultArray
-    scheduleData.push(item);
+function updateSchedules() {
+  fetchData('get_schedule_from_DB.php').then(async (data) => {
+    // Process and apply schedules
+    // Call the function and use forEach to process the data
+    data.forEach((item) => {
+      // Process the item and add it to the resultArray
+      scheduleData.push(item);
+    });
+    await applySchedules(scheduleData);
   });
-  applySchedules(scheduleData);
-});
+}
 
 // Fetching worker data from DB
 const fetchWorkers = async function (location_id) {
@@ -81,11 +84,11 @@ const fetchWorkers = async function (location_id) {
   }));
 };
 
-// Call the fetchWorkers function and populate the workers array
-fetchWorkers().then((data) => {
-  workers = data;
-  updateTable();
-});
+// // Call the fetchWorkers function and populate the workers array
+// fetchWorkers().then((data) => {
+//   workers = data;
+//   updateTable();
+// });
 
 // Populate location select element
 function populateLocationSelect(locations, target) {
@@ -420,7 +423,9 @@ function addWorker() {
       console.log(data);
       if (data.success) {
         // document.getElementById('addWorkerModal').hide();
-        location.reload();
+        reloadAfterUpdate();
+        const addModal = bootstrap.Modal.getInstance(document.getElementById('addWorkerModal'));
+        addModal.hide();
       } else {
         alert('Error: ' + data.message);
       }
@@ -437,7 +442,7 @@ function handleClickEdit(button) {
     const workerId = this.dataset.worker_id;
     const firstName = this.dataset.first_name;
     const lastName = this.dataset.last_name;
-    console.log(this.dataset);
+    // console.log(this.dataset);
 
     // Populate the input fields in the modal
     document.getElementById('editWorkerId').value = workerId;
@@ -495,7 +500,8 @@ editWorkerForm.addEventListener('submit', (event) => {
           document.getElementById('editWorkerModal'),
         );
         editWorkerModal.hide();
-        location.reload();
+        reloadAfterUpdate();
+        updateSchedules();
       } else {
         // Show an error message
         alert('Error updating worker: ' + result.message);
@@ -531,7 +537,8 @@ deleteWorkerForm.addEventListener('submit', (event) => {
         // Close the edit modal and refresh the workers list
         const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
         deleteModal.hide();
-        location.reload();
+        // location.reload();
+        reloadAfterUpdate();
       } else {
         // Show an error message
         alert('Error updating worker: ' + result.message);
@@ -554,3 +561,12 @@ deleteWorkerForm.addEventListener('submit', (event) => {
 //   const data = await response.json();
 //   return data.result;
 // }
+
+function reloadAfterUpdate() {
+  fetchWorkers(document.getElementById('locationSelect').value).then(async (data) => {
+    workers = data;
+    await updateTable();
+  });
+}
+
+updateSchedules();
