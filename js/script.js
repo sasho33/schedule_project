@@ -205,6 +205,7 @@ function createTable(dates) {
     deleteButton.appendChild(deleteIcon);
     deleteButton.dataset.worker_id = workerObj.id;
     tdEdit.appendChild(deleteButton);
+    handleClickDelete(deleteButton);
 
     tr.appendChild(tdEdit);
 
@@ -449,6 +450,21 @@ function handleClickEdit(button) {
   });
 }
 
+function handleClickDelete(button) {
+  // eventListener for edit button
+  button.addEventListener('click', function () {
+    // Get the worker details from the dataset
+    const workerId = this.dataset.worker_id;
+
+    // Populate the input fields in the modal
+    document.getElementById('deleteWorkerId').value = workerId;
+
+    // Show the edit worker modal
+    const deleteWorkerModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteWorkerModal.show();
+  });
+}
+
 const editWorkerForm = document.getElementById('editWorkerForm');
 
 editWorkerForm.addEventListener('submit', (event) => {
@@ -490,3 +506,51 @@ editWorkerForm.addEventListener('submit', (event) => {
       alert('Error updating worker: ' + error.message);
     });
 });
+
+const deleteWorkerForm = document.getElementById('deleteModal');
+// Function to delete a worker
+deleteWorkerForm.addEventListener('submit', (event) => {
+  event.preventDefault(); // Prevent the form from submitting and refreshing the page
+
+  // Get the worker data from the form
+  const workerDeleteId = document.getElementById('deleteWorkerId').value;
+
+  // Send the updated worker data to the server
+  fetch('delete_worker.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      worker_id: workerDeleteId,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        // Close the edit modal and refresh the workers list
+        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+        deleteModal.hide();
+        location.reload();
+      } else {
+        // Show an error message
+        alert('Error updating worker: ' + result.message);
+      }
+    })
+    .catch((error) => {
+      console.error('Error deleting worker:', error);
+      alert('Error deleteing worker: ' + error.message);
+    });
+});
+
+// async function deleteWorker(worker_id) {
+//   const response = await fetch('delete_worker.php', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ worker_id }),
+//   });
+//   const data = await response.json();
+//   return data.result;
+// }
