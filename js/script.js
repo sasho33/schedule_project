@@ -22,8 +22,7 @@ document.getElementById('showSelect').addEventListener('change', function () {
 });
 
 //event listeners for next/previous week buttons
-// document.getElementById('nextWeek').addEventListener('click', nextWeek);
-// document.getElementById('prevWeek').addEventListener('click', prevWeek);
+
 nextPeriodButton.addEventListener('click', nextPeriod);
 previousPeriodButton.addEventListener('click', prevPeriod);
 // Event listener for location select
@@ -75,14 +74,6 @@ fetchWorkers().then((data) => {
   workers = data;
   updateTable();
 });
-
-// const scheduleDb = async function fetchData() {
-//   const response = await fetch('get_schedule_from_DB.php');
-//   const data = await response.json();
-//   return data;
-// };
-
-// scheduleDb().then((data) => {});
 
 // Populate location select element
 function populateLocationSelect(locations) {
@@ -168,9 +159,6 @@ function createTableHeader(dates) {
 }
 
 function createTable(dates) {
-  // const dates = getWeekDates(currentDate);
-  // const dates = getMonthDates(currentDate);
-
   // Add dates to the header row
   const headerRow = createTableHeader(dates);
   table.querySelector('thead').appendChild(headerRow);
@@ -186,19 +174,17 @@ function createTable(dates) {
     tr.appendChild(tdName);
     const tdEdit = document.createElement('td');
     tdEdit.setAttribute('scope', 'col');
-    // tdEdit.innerHTML =
-    //   '<button class="btn-success btn-sm"><i class="fa-solid fa-pen-to-square"></i></button>  <button class="btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>';
-    // tr.appendChild(tdEdit);
+
     // creatin edit buttons insile cell
     const editButton = document.createElement('button');
-    editButton.classList.add('editButton', 'btn-success', 'btn-sm');
+    editButton.classList.add('editButton', 'btn-primary', 'btn-sm');
     const editIcon = document.createElement('i');
     editIcon.classList.add('fa-solid', 'fa-pen-to-square');
     editButton.appendChild(editIcon);
     tdEdit.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
-    deleteButton.classList.add('btn-danger', 'btn-sm');
+    deleteButton.classList.add('deleteButton', 'btn-danger', 'btn-sm');
     const deleteIcon = document.createElement('i');
     deleteIcon.classList.add('fa-solid', 'fa-trash');
     deleteButton.appendChild(deleteIcon);
@@ -257,21 +243,7 @@ function updateTable() {
       th.innerText = formatDate(dates[i - 1]);
     }
   }
-
-  // while (bodyRow.children.length > 1) {
-  //   bodyRow.removeChild();
-  // }
 }
-
-// function nextWeek() {
-//   currentDate.setDate(currentDate.getDate() + 7);
-//   updateTable();
-// }
-
-// function prevWeek() {
-//   currentDate.setDate(currentDate.getDate() - 7);
-//   updateTable();
-// }
 
 function nextPeriod() {
   const showSelect = document.getElementById('showSelect');
@@ -335,20 +307,6 @@ function cellClickHandler() {
     shiftTime: shiftTime,
   };
 
-  // Send data to PHP using XMLHttpRequest and JSON
-  //   const xhr = new XMLHttpRequest();
-  //   xhr.open('POST', action === 'insert' ? 'insert_schedule.php' : 'delete_schedule.php', true);
-  //   xhr.setRequestHeader('Content-Type', 'application/json');
-
-  //   xhr.onreadystatechange = function () {
-  //     if (xhr.readyState === 4 && xhr.status === 200) {
-  //       console.log('Action executed: ' + action);
-  //     }
-  //   };
-
-  //   xhr.send(JSON.stringify(data));
-  // }
-
   const url = action === 'insert' ? 'insert_schedule.php' : 'delete_schedule.php';
 
   fetch(url, {
@@ -411,4 +369,3 @@ function updateTotalHours() {
     totalCell.textContent = sum;
   });
 }
-// updateTable();
