@@ -10,6 +10,14 @@ const nextPeriodButton = document.getElementById('nextWeek');
 const previousPeriodButton = document.getElementById('prevWeek');
 const table = document.getElementById('workerTable');
 const headerRow = document.querySelector('tr');
+const locationSelect = document.getElementById('locationSelect');
+const locationSelectModal = document.getElementById('workerLocation');
+
+document.getElementById('addWorkerForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+  addWorker();
+});
+
 document.getElementById('showSelect').addEventListener('change', function () {
   updateTable();
   if (this.value === 'Month') {
@@ -45,7 +53,9 @@ async function fetchData(url) {
 
 // Fetch location data and populate the select element
 fetchData('get_locations_from_DB.php').then((data) => {
-  populateLocationSelect(data);
+  populateLocationSelect(data, locationSelect);
+
+  populateLocationSelect(data, locationSelectModal);
 });
 
 // fetching schedule data from DB
@@ -65,7 +75,9 @@ const fetchWorkers = async function (location_id) {
   const data = await response.json();
   return data.map((worker) => ({
     id: worker.id,
-    name: `${worker.first_name} ${worker.last_name}`, // Use the correct column name for the worker name
+    name: `${worker.first_name} ${worker.last_name}`,
+    first_name: `${worker.first_name}`,
+    last_name: `${worker.last_name}`,
   }));
 };
 
@@ -76,31 +88,30 @@ fetchWorkers().then((data) => {
 });
 
 // Populate location select element
-function populateLocationSelect(locations) {
-  const locationSelect = document.getElementById('locationSelect');
-
+function populateLocationSelect(locations, target) {
   locations.forEach((location) => {
     const option = document.createElement('option');
     option.value = location.id;
     option.textContent = location.location_name; // Display location name as innerText
-    locationSelect.appendChild(option);
+    target.appendChild(option);
   });
 
   // Set the first location as the default selected option
-  locationSelect.selectedIndex = 0;
-  locationSelect.dispatchEvent(new Event('change'));
+  target.selectedIndex = 0;
+  if (target == locationSelect) {
+    target.dispatchEvent(new Event('change'));
+  } //
 }
 
 function getWeekDates(date) {
   const dayIndex = date.getDay();
-  // console.log(dayIndex);
+
   const dates = [];
 
   for (let i = 1; i < 8; i++) {
     const dayDate = new Date(date);
     dayDate.setDate(dayDate.getDate() - dayIndex + i);
     dates.push(dayDate);
-    // console.log(dates);
   }
   return dates;
 }
@@ -181,6 +192,9 @@ function createTable(dates) {
     const editIcon = document.createElement('i');
     editIcon.classList.add('fa-solid', 'fa-pen-to-square');
     editButton.appendChild(editIcon);
+    editButton.dataset.worker_id = workerObj.id;
+    editButton.dataset.first_name = workerObj.first_name;
+    editButton.dataset.last_name = workerObj.last_name;
     tdEdit.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
@@ -188,6 +202,7 @@ function createTable(dates) {
     const deleteIcon = document.createElement('i');
     deleteIcon.classList.add('fa-solid', 'fa-trash');
     deleteButton.appendChild(deleteIcon);
+    deleteButton.dataset.worker_id = workerObj.id;
     tdEdit.appendChild(deleteButton);
 
     tr.appendChild(tdEdit);
@@ -222,7 +237,7 @@ function clearTable() {
 function updateTable() {
   const showSelect = document.getElementById('showSelect');
   const selectedOption = showSelect.options[showSelect.selectedIndex].value;
-  console.log('selected option:' + selectedOption);
+
   let dates;
   if (selectedOption === 'Month') {
     dates = getMonthDates(currentDate);
@@ -368,4 +383,47 @@ function updateTotalHours() {
     const totalCell = row.querySelector('#total');
     totalCell.textContent = sum;
   });
+}
+
+function addWorker() {
+  const firstName = document.querySelector('input[name="firstName"]').value;
+  const lastName = document.querySelector('input[name="lastName"]').value;
+  const workerLocation = locationSelectModal.value;
+
+  // Fetch location data and populate the select element
+  // fetchData('get_locations_from_DB.php').then((data) => {
+
+  // });
+
+  if (firstName === '' || lastName === '' || workerLocation === '') {
+    alert('All fields must be filled out.');
+    return;
+  }
+
+  const data = {
+    first_name: firstName,
+    last_name: lastName,
+    location_id: workerLocation,
+  };
+
+  fetch('add_worker.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      if (data.success) {
+        // document.getElementById('addWorkerModal').hide();
+        location.reload();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    });
 }

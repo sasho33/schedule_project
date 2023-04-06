@@ -81,19 +81,21 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form action="" method="post">
+            <form id="addWorkerForm" action="" method="post">
               <div class="form-group">
                 <label for="firstName" class="form-label">First name</label>
                 <input type="text" class="form-control" name="firstName">
                 <label for="lastName" class="form-label">Last name:</label>
                 <input type="text" class="form-control" name="lastName">
-                <label for="locationSelect">Location:</label>
-        <select class="form-select" id="locationSelect"></select>
+                <label for="workerLocation">Location</label>
+  <select class="form-control" id="workerLocation" required>
+    <!-- Populate options with locations from the 'location' table -->
+  </select>
               </div>
             
           </div>
           <div class="modal-footer">
-            <button class="btn btn-success">Save</button>
+            <button type="submit" name="add" class="btn btn-success">Save</button>
           </div></form>
         </div>
       </div>
