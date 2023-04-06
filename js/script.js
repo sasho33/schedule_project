@@ -196,6 +196,7 @@ function createTable(dates) {
     editButton.dataset.first_name = workerObj.first_name;
     editButton.dataset.last_name = workerObj.last_name;
     tdEdit.appendChild(editButton);
+    handleClickEdit(editButton);
 
     const deleteButton = document.createElement('button');
     deleteButton.classList.add('deleteButton', 'btn-danger', 'btn-sm');
@@ -427,3 +428,65 @@ function addWorker() {
       console.error('Error:', error);
     });
 }
+
+function handleClickEdit(button) {
+  // eventListener for edit button
+  button.addEventListener('click', function () {
+    // Get the worker details from the dataset
+    const workerId = this.dataset.worker_id;
+    const firstName = this.dataset.first_name;
+    const lastName = this.dataset.last_name;
+    console.log(this.dataset);
+
+    // Populate the input fields in the modal
+    document.getElementById('editWorkerId').value = workerId;
+    document.getElementById('editWorkerFirstName').value = firstName;
+    document.getElementById('editWorkerLastName').value = lastName;
+
+    // Show the edit worker modal
+    const editWorkerModal = new bootstrap.Modal(document.getElementById('editWorkerModal'));
+    editWorkerModal.show();
+  });
+}
+
+const editWorkerForm = document.getElementById('editWorkerForm');
+
+editWorkerForm.addEventListener('submit', (event) => {
+  event.preventDefault(); // Prevent the form from submitting and refreshing the page
+
+  // Get the worker data from the form
+  const workerId = document.getElementById('editWorkerId').value;
+  const firstName = document.getElementById('editWorkerFirstName').value;
+  const lastName = document.getElementById('editWorkerLastName').value;
+
+  // Send the updated worker data to the server
+  fetch('update_worker.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      worker_id: workerId,
+      first_name: firstName,
+      last_name: lastName,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        // Close the edit modal and refresh the workers list
+        const editWorkerModal = bootstrap.Modal.getInstance(
+          document.getElementById('editWorkerModal'),
+        );
+        editWorkerModal.hide();
+        location.reload();
+      } else {
+        // Show an error message
+        alert('Error updating worker: ' + result.message);
+      }
+    })
+    .catch((error) => {
+      console.error('Error updating worker:', error);
+      alert('Error updating worker: ' + error.message);
+    });
+});

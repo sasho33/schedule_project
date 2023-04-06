@@ -100,6 +100,41 @@
         </div>
       </div>
     </div>
+<!-- Modal edit -->
+<!-- Edit Worker Modal -->
+<div class="modal fade" id="editWorkerModal" tabindex="-1" aria-labelledby="editWorkerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editWorkerModalLabel">Edit Worker</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editWorkerForm">
+          <input type="hidden" id="editWorkerId">
+          <div class="mb-3">
+            <label for="editWorkerFirstName" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="editWorkerFirstName" required>
+          </div>
+          <div class="mb-3">
+            <label for="editWorkerLastName" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="editWorkerLastName" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+          
+        </form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    
+
+
+
 
     <script src="js/script.js"></script>
     <script src="https://kit.fontawesome.com/5bd0d5f620.js" crossorigin="anonymous"></script>
