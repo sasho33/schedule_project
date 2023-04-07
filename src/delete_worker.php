@@ -2,7 +2,8 @@
 // Delete worker from the workers, schedule, and location_worker tables
 
 // Connect to the database
-require_once 'db_connect.php';
+require_once './db_connect.php';
+header('Content-Type: application/json');
 
 // Get the JSON input data
 $data = json_decode(file_get_contents("php://input"), true);

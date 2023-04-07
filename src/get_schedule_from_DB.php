@@ -1,5 +1,5 @@
 <?php
-require 'db_connect.php';
+require './db_connect.php';
 
 $sql = "SELECT * FROM `schedule`";
 $result = $conn->query($sql);

@@ -64,7 +64,7 @@ editWorkerForm.addEventListener('submit', (event) => {
   const lastName = document.getElementById('editWorkerLastName').value;
 
   // Send the updated worker data to the server
-  fetch('src/update_worker.php', {
+  fetch('../src/update_worker.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ deleteWorkerForm.addEventListener('submit', (event) => {
   const workerDeleteId = document.getElementById('deleteWorkerId').value;
 
   // Send the updated worker data to the server
-  fetch('src/delete_worker.php', {
+  fetch('../src/delete_worker.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -134,20 +134,26 @@ deleteWorkerForm.addEventListener('submit', (event) => {
 //function for fetching data from db in async way
 async function fetchData(url) {
   const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
   const data = await response.json();
   return data;
 }
 
 // Fetch location data and populate the select element
-fetchData('src/get_locations_from_DB.php').then((data) => {
-  populateLocationSelect(data, locationSelect);
-
-  populateLocationSelect(data, locationSelectModal);
-});
+fetchData('../src/get_locations_from_DB.php')
+  .then((data) => {
+    populateLocationSelect(data, locationSelect);
+    populateLocationSelect(data, locationSelectModal);
+  })
+  .catch((error) => {
+    console.error('Error fetching data:', error);
+  });
 
 // fetching schedule data from DB
 function updateSchedules() {
-  fetchData('src/get_schedule_from_DB.php').then(async (data) => {
+  fetchData('../src/get_schedule_from_DB.php').then(async (data) => {
     // Process and apply schedules
     // Call the function and use forEach to process the data
     data.forEach((item) => {
@@ -160,7 +166,7 @@ function updateSchedules() {
 
 // Fetching worker data from DB
 const fetchWorkers = async function (location_id) {
-  const response = await fetch('src/get_workers_from_DB.php?location_id=' + location_id);
+  const response = await fetch('../src/get_workers_from_DB.php?location_id=' + location_id);
   const data = await response.json();
   return data.map((worker) => ({
     id: worker.id,
@@ -407,7 +413,7 @@ function cellClickHandler() {
     shiftTime: shiftTime,
   };
 
-  const url = action === 'insert' ? 'src/insert_schedule.php' : 'src/delete_schedule.php';
+  const url = action === 'insert' ? '../src/insert_schedule.php' : '../src/delete_schedule.php';
 
   fetch(url, {
     method: 'POST',
@@ -491,7 +497,7 @@ function addWorker() {
     location_id: workerLocation,
   };
 
-  fetch('src/add_worker.php', {
+  fetch('../src/add_worker.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

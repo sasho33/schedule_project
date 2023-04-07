@@ -1,6 +1,6 @@
 <?php
 // Database connection
-require_once 'db_connect.php';
+require_once './db_connect.php';
 
 $location_id = isset($_GET['location_id']) ? intval($_GET['location_id']) : null;
 

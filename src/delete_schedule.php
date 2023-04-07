@@ -1,5 +1,7 @@
 <?php
-require 'db_connect.php';
+require './db_connect.php';
+
+header('Content-Type: application/json');
 
 // Get JSON data from request
 $jsonData = json_decode(file_get_contents('php://input'), true);

@@ -1,6 +1,6 @@
 <?php
 // Database connection
-require_once 'db_connect.php';
+require_once './db_connect.php';
 
 $query = "SELECT * FROM location";
 $result = mysqli_query($conn, $query);
