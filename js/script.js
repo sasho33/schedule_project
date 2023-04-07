@@ -365,8 +365,8 @@ function nextPeriod() {
   } else {
     currentDate.setDate(currentDate.getDate() + 7);
   }
-
   updateTable();
+  updateSchedules();
 }
 
 function prevPeriod() {
@@ -385,6 +385,7 @@ function prevPeriod() {
   }
 
   updateTable();
+  updateSchedules();
 }
 
 //handle the clicks to fetch data and update the table
