@@ -6,19 +6,28 @@ const currentDate = new Date();
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let scheduleData = [];
 let workers = [];
+
+// DOM elements
+
 const nextPeriodButton = document.getElementById('nextWeek');
 const previousPeriodButton = document.getElementById('prevWeek');
 const table = document.getElementById('workerTable');
 const headerRow = document.querySelector('tr');
 const locationSelect = document.getElementById('locationSelect');
 const locationSelectModal = document.getElementById('workerLocation');
+const deleteWorkerForm = document.getElementById('deleteModal');
+const addWorkerForm = document.getElementById('addWorkerForm');
+const selectRange = document.getElementById('showSelect');
+const editWorkerForm = document.getElementById('editWorkerForm');
 
-document.getElementById('addWorkerForm').addEventListener('submit', function (event) {
+// event listeners:
+
+addWorkerForm.addEventListener('submit', function (event) {
   event.preventDefault();
   addWorker();
 });
 
-document.getElementById('showSelect').addEventListener('change', function () {
+selectRange.addEventListener('change', function () {
   reloadAfterUpdate();
   updateSchedules();
   if (this.value === 'Month') {
@@ -45,6 +54,83 @@ document.getElementById('locationSelect').addEventListener('change', function ()
   });
 });
 
+// edit worker form event listener
+editWorkerForm.addEventListener('submit', (event) => {
+  event.preventDefault(); // Prevent the form from submitting and refreshing the page
+
+  // Get the worker data from the form
+  const workerId = document.getElementById('editWorkerId').value;
+  const firstName = document.getElementById('editWorkerFirstName').value;
+  const lastName = document.getElementById('editWorkerLastName').value;
+
+  // Send the updated worker data to the server
+  fetch('src/update_worker.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      worker_id: workerId,
+      first_name: firstName,
+      last_name: lastName,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        // Close the edit modal and refresh the workers list
+        const editWorkerModal = bootstrap.Modal.getInstance(
+          document.getElementById('editWorkerModal'),
+        );
+        editWorkerModal.hide();
+        reloadAfterUpdate();
+        updateSchedules();
+      } else {
+        // Show an error message
+        alert('Error updating worker: ' + result.message);
+      }
+    })
+    .catch((error) => {
+      console.error('Error updating worker:', error);
+      alert('Error updating worker: ' + error.message);
+    });
+});
+
+// Function to delete a worker
+deleteWorkerForm.addEventListener('submit', (event) => {
+  event.preventDefault(); // Prevent the form from submitting and refreshing the page
+
+  // Get the worker data from the form
+  const workerDeleteId = document.getElementById('deleteWorkerId').value;
+
+  // Send the updated worker data to the server
+  fetch('src/delete_worker.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      worker_id: workerDeleteId,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        // Close the edit modal and refresh the workers list
+        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+        deleteModal.hide();
+        // location.reload();
+        reloadAfterUpdate();
+      } else {
+        // Show an error message
+        alert('Error updating worker: ' + result.message);
+      }
+    })
+    .catch((error) => {
+      console.error('Error deleting worker:', error);
+      alert('Error deleteing worker: ' + error.message);
+    });
+});
 //function for fetching data from db in async way
 async function fetchData(url) {
   const response = await fetch(url);
@@ -463,86 +549,6 @@ function handleClickDelete(button) {
     deleteWorkerModal.show();
   });
 }
-
-const editWorkerForm = document.getElementById('editWorkerForm');
-
-editWorkerForm.addEventListener('submit', (event) => {
-  event.preventDefault(); // Prevent the form from submitting and refreshing the page
-
-  // Get the worker data from the form
-  const workerId = document.getElementById('editWorkerId').value;
-  const firstName = document.getElementById('editWorkerFirstName').value;
-  const lastName = document.getElementById('editWorkerLastName').value;
-
-  // Send the updated worker data to the server
-  fetch('src/update_worker.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      worker_id: workerId,
-      first_name: firstName,
-      last_name: lastName,
-    }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.success) {
-        // Close the edit modal and refresh the workers list
-        const editWorkerModal = bootstrap.Modal.getInstance(
-          document.getElementById('editWorkerModal'),
-        );
-        editWorkerModal.hide();
-        reloadAfterUpdate();
-        updateSchedules();
-      } else {
-        // Show an error message
-        alert('Error updating worker: ' + result.message);
-      }
-    })
-    .catch((error) => {
-      console.error('Error updating worker:', error);
-      alert('Error updating worker: ' + error.message);
-    });
-});
-
-const deleteWorkerForm = document.getElementById('deleteModal');
-// Function to delete a worker
-deleteWorkerForm.addEventListener('submit', (event) => {
-  event.preventDefault(); // Prevent the form from submitting and refreshing the page
-
-  // Get the worker data from the form
-  const workerDeleteId = document.getElementById('deleteWorkerId').value;
-
-  // Send the updated worker data to the server
-  fetch('src/delete_worker.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      worker_id: workerDeleteId,
-    }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.success) {
-        // Close the edit modal and refresh the workers list
-        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-        deleteModal.hide();
-        // location.reload();
-        reloadAfterUpdate();
-      } else {
-        // Show an error message
-        alert('Error updating worker: ' + result.message);
-      }
-    })
-    .catch((error) => {
-      console.error('Error deleting worker:', error);
-      alert('Error deleteing worker: ' + error.message);
-    });
-});
 
 function reloadAfterUpdate() {
   fetchWorkers(document.getElementById('locationSelect').value).then(async (data) => {
